@@ -3,7 +3,7 @@
   <Profile>
     Self-hosted AI workspace - chat, agents, deep research, documents, email, calendar, and model Cookbook. Built by pewdiepie-archdaemon. This repository provides the main Odysseus app along with branded companion templates (ChromaDB, SearXNG, ntfy) that are pre-configured to work together out of the box. A docker-compose.yml is also available for one-click stack deployment via the Compose Manager plugin.
   </Profile>
-  <Icon>https://raw.githubusercontent.com/pewdiepie-archdaemon/odysseus/dev/docs/odysseus.jpg</Icon>
+  <Icon>https://raw.githubusercontent.com/realitymolder/Odysseus-Unraid/main/icon.svg</Icon>
   <WebPage>https://github.com/realitymolder/Odysseus-Unraid</WebPage>
   <Support>https://github.com/realitymolder/Odysseus-Unraid/issues</Support>
 </CommunityApplications>

@@ -13,7 +13,7 @@
   <Category>AI:Tools</Category>
   <WebUI>http://[IP]:[PORT:7000]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/realitymolder/Odysseus-Unraid/main/templates/odysseus.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/pewdiepie-archdaemon/odysseus/dev/docs/odysseus.jpg</Icon>
+  <Icon>https://raw.githubusercontent.com/realitymolder/Odysseus-Unraid/main/icon.svg</Icon>
   <DonorText>Support Odysseus development</DonorText>
   <DonorLink>https://github.com/pewdiepie-archdaemon/odysseus</DonorLink>
   <Requires>
