@@ -1,0 +1,20 @@
+<Container version="2">
+  <Name>ChromaDB</Name>
+  <Repository>docker.io/chromadb/chroma:latest</Repository>
+  <Registry>https://registry.hub.docker.com</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/chroma-core/chroma/issues</Support>
+  <Project>https://github.com/chroma-core/chroma</Project>
+  <Overview>Vector database for AI applications with persistent embeddings storage. Compatible with Odysseus AI workspace.</Overview>
+  <Description>ChromaDB is an open-source vector database designed for AI applications. It stores embeddings and their metadata for semantic search, RAG, and memory systems.&#13;&#13;Compatible with Odysseus — configure the host and port in Odysseus settings to connect.&#13;&#13;For Odysseus AIO users: this container is auto-deployed by the master container — no manual install needed.</Description>
+  <Category>AI:Tools</Category>
+  <TemplateURL>https://raw.githubusercontent.com/realitymolder/Odysseus-Unraid/main/templates/chromadb.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/realitymolder/Odysseus-Unraid/main/chromadb-icon.svg</Icon>
+  <Requires/>
+  <Config Name="ChromaDB Port" Target="8000" Default="8000" Mode="tcp" Description="ChromaDB API port" Type="Port" Display="always" Required="true" Mask="false">8000</Config>
+  <Config Name="Chroma Data" Target="/chroma/chroma" Default="/mnt/user/appdata/chromadb" Mode="rw" Description="ChromaDB persistent data" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/chromadb</Config>
+  <Config Name="Telemetry" Target="ANONYMIZED_TELEMETRY" Default="FALSE" Description="Disable telemetry" Type="Variable" Display="always" Required="false" Mask="false">FALSE</Config>
+</Container>

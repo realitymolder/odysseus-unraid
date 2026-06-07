@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <rect width="128" height="128" rx="20" fill="#1a1a2e"/>
+  <circle cx="64" cy="60" r="36" fill="#4ecca3" opacity="0.15"/>
+  <circle cx="64" cy="60" r="24" fill="#4ecca3" opacity="0.15"/>
+  <circle cx="64" cy="60" r="12" fill="#4ecca3" opacity="0.3"/>
+  <circle cx="64" cy="60" r="4" fill="#4ecca3"/>
+  <line x1="64" y1="16" x2="64" y2="40" stroke="#4ecca3" stroke-width="2" opacity="0.5"/>
+  <line x1="64" y1="80" x2="64" y2="104" stroke="#4ecca3" stroke-width="2" opacity="0.5"/>
+  <line x1="16" y1="60" x2="40" y2="60" stroke="#4ecca3" stroke-width="2" opacity="0.5"/>
+  <line x1="88" y1="60" x2="112" y2="60" stroke="#4ecca3" stroke-width="2" opacity="0.5"/>
+  <line x1="30.5" y1="30.5" x2="46" y2="46" stroke="#4ecca3" stroke-width="1.5" opacity="0.3"/>
+  <line x1="82" y1="46" x2="97.5" y2="30.5" stroke="#4ecca3" stroke-width="1.5" opacity="0.3"/>
+  <line x1="30.5" y1="89.5" x2="46" y2="74" stroke="#4ecca3" stroke-width="1.5" opacity="0.3"/>
+  <line x1="82" y1="74" x2="97.5" y2="89.5" stroke="#4ecca3" stroke-width="1.5" opacity="0.3"/>
+  <text x="64" y="116" text-anchor="middle" font-family="monospace" font-size="11" font-weight="bold" fill="#4ecca3" letter-spacing="1">chroma</text>
+</svg>
