@@ -111,17 +111,6 @@ For NVIDIA GPUs, install the **NVIDIA Container Toolkit** on your Unraid host vi
 - **AIO:** Use the management UI at port 9000 (Update All button), or update the AIO image through Unraid and it will pull latest companion images on next deploy.
 - **Docker Compose:** `docker compose pull && docker compose up -d`
 
-## Submitting to Unraid Community Apps
-
-Once your repository is ready:
-
-1. Go to [ca.unraid.net/submit](https://ca.unraid.net/submit)
-2. Fork the [unraid-community-apps](https://github.com/community-apps/unraid-community-apps) repo
-3. Add your `ca_profile.xml` URL to the appropriate location
-4. Submit a pull request
-
-See the [official docs](https://ca.unraid.net/submit/help/repository-xml) for detailed submission guidelines.
-
 ## License
 
 Templates: [MIT](LICENSE)

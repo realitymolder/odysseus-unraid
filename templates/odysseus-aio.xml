@@ -37,6 +37,7 @@
   <Config Name="Admin User" Target="ODYSSEUS_ADMIN_USER" Default="admin" Description="First admin account username" Type="Variable" Display="always" Required="false" Mask="false">admin</Config>
   <Config Name="Admin Password" Target="ODYSSEUS_ADMIN_PASSWORD" Default="" Description="Pre-seed admin password (leave blank for auto-generated)" Type="Variable" Display="always" Required="false" Mask="true"></Config>
   <Config Name="DNS Servers" Target="ODYSSEUS_DNS_SERVERS" Default="8.8.8.8,1.1.1.1" Description="DNS servers for managed containers (comma-separated)" Type="Variable" Display="always" Required="false" Mask="false">8.8.8.8,1.1.1.1</Config>
+  <Config Name="NVIDIA GPU" Target="ODYSSEUS_NVIDIA_ENABLED" Default="false" Description="Enable NVIDIA GPU passthrough for the Odysseus app container (requires NVIDIA Container Toolkit)" Type="Variable" Display="always" Required="false" Mask="false">false</Config>
   <Config Name="LLM Host" Target="ODYSSEUS_LLM_HOST" Default="" Description="Primary LLM server hostname or IP" Type="Variable" Display="always" Required="false" Mask="false"></Config>
   <Config Name="OpenAI API Key" Target="ODYSSEUS_OPENAI_API_KEY" Default="" Description="OpenAI API key" Type="Variable" Display="always" Required="false" Mask="true"></Config>
   <Config Name="Ollama URL" Target="ODYSSEUS_OLLAMA_BASE_URL" Default="" Description="Ollama server URL (e.g. http://host.docker.internal:11434)" Type="Variable" Display="always" Required="false" Mask="false"></Config>

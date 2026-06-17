@@ -153,6 +153,7 @@ def get_master_env():
         "ODYSSEUS_SEARXNG_SECRET",
         "ODYSSEUS_NTFY_BASE_URL",
         "ODYSSEUS_DNS_SERVERS",
+        "ODYSSEUS_NVIDIA_ENABLED",
     ]:
         val = os.environ.get(key, "")
         if val:
@@ -207,6 +208,11 @@ def create_and_start_container(spec, master_env):
         dns = dns.strip()
         if dns:
             cmd.extend(["--dns", dns])
+
+    if name == "odysseus-aio-app" and master_env.get("ODYSSEUS_NVIDIA_ENABLED", "") == "true":
+        cmd.extend(["--runtime", "nvidia"])
+        cmd.extend(["-e", "NVIDIA_VISIBLE_DEVICES=all"])
+        cmd.extend(["-e", "NVIDIA_DRIVER_CAPABILITIES=all"])
 
     for host_p, container_p in ports:
         host_p_str = str(host_p)
