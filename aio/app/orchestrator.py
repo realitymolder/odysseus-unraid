@@ -206,7 +206,7 @@ def pull_image(image):
 
 def create_and_start_container(spec, master_env):
     name = spec["name"]
-    image = spec["image"]
+    image = resolve_image(spec, master_env)
     env = spec["env"] if not callable(spec["env"]) else spec["env"](master_env)
     ports = spec["ports"](master_env) if callable(spec["ports"]) else spec["ports"]
 
