@@ -1,22 +1,106 @@
-name: Build and publish Odysseus AIO mastercontainer
+name: Build and publish Odysseus AIO
 
 on:
+  schedule:
+    - cron: "0 */4 * * *"
   push:
     branches: [main]
     paths:
       - "aio/**"
   workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: "Force rebuild even if no changes detected"
+        required: false
+        type: boolean
+        default: false
+      custom_tag:
+        description: "Custom tag to add (e.g. v1.2.3)"
+        required: false
+        type: string
 
 env:
   IMAGE_NAME: realitymolder/odysseus-aio
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+permissions:
+  contents: write
 
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    outputs:
+      should_build: ${{ steps.compare.outputs.should_build }}
+      current_sha: ${{ steps.current.outputs.sha }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current aio commit SHA
+        id: current
+        run: echo "sha=$(git log -1 --format=%H -- aio/)" >> "$GITHUB_OUTPUT"
+
+      - name: Query Docker Hub for last built SHA
+        id: hub
+        continue-on-error: true
+        run: |
+          # Get auth token for Docker Hub registry
+          TOKEN=$(curl -fsSL "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${{ env.IMAGE_NAME }}:pull" | jq -r '.token')
+
+          # Get the manifest for the stable tag
+          MANIFEST=$(curl -fsSL \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            "https://registry-1.docker.io/v2/${{ env.IMAGE_NAME }}/manifests/stable")
+
+          # Extract config digest (works for both manifest list and single manifest)
+          CONFIG_DIGEST=$(echo "$MANIFEST" | jq -r \
+            '.manifests[0].digest // .config.digest')
+
+          # Fetch the image config to get labels
+          CONFIG=$(curl -fsSL \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            "https://registry-1.docker.io/v2/${{ env.IMAGE_NAME }}/blobs/$CONFIG_DIGEST")
+
+          REVISION=$(echo "$CONFIG" | jq -r '.config.Labels.revision // empty')
+          echo "last_sha=$REVISION" >> "$GITHUB_OUTPUT"
+
+      - name: Compare SHAs
+        id: compare
+        run: |
+          if [ "${{ inputs.force_rebuild }}" = "true" ]; then
+            echo "Force rebuild requested"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ steps.hub.outputs.last_sha }}" ]; then
+            echo "No previous build found on Docker Hub"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.hub.outputs.last_sha }}" = "${{ steps.current.outputs.sha }}" ]; then
+            echo "No changes detected"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changes detected: ${{ steps.hub.outputs.last_sha }} -> ${{ steps.current.outputs.sha }}"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: always() && (needs.check-changes.result == 'skipped' || needs.check-changes.outputs.should_build == 'true')
+    outputs:
+      commit_sha: ${{ steps.tags.outputs.commit_sha }}
+      short_sha: ${{ steps.tags.outputs.short_sha }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -24,20 +108,96 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
+      - name: Compute SHA and tags
+        id: tags
+        run: |
+          SHA="${{ needs.check-changes.outputs.current_sha || github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          DATE="$(date -u +%Y-%m-%d)"
+          echo "commit_sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+
+          # Build tag list
+          TAGS="stable,stable-${SHORT_SHA},stable-${DATE},latest"
+          if [ -n "${{ inputs.custom_tag }}" ]; then
+            TAGS="${TAGS},${{ inputs.custom_tag }}"
+          fi
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=stable
             type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,format=short
+            type=raw,value=${{ steps.tags.outputs.short_sha }}
+            type=raw,value=stable-${{ steps.tags.outputs.date }}
+            type=raw,value=${{ inputs.custom_tag }},enable=${{ inputs.custom_tag != '' }}
 
-      - name: Build and push Docker image
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./aio/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            revision=${{ steps.tags.outputs.commit_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_SHA="${{ needs.build-and-push.outputs.commit_sha }}"
+          SHORT_SHA="${{ needs.build-and-push.outputs.short_sha }}"
+          DATE="$(date -u +%Y-%m-%d)"
+
+          # Find the previous stable tag
+          PREV_TAG=$(git tag -l 'stable-*' --sort=-version:refname | head -n1)
+
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              echo "Changes since ${PREV_TAG}:"
+              echo ""
+              git log "${PREV_TAG}..${CURRENT_SHA}" --pretty=format:"- %h %s" -- aio/
+            else
+              echo "Initial release:"
+              echo ""
+              git log --pretty=format:"- %h %s" -20 -- aio/
+            fi
+            echo ""
+            echo ""
+            echo "---"
+            echo "## Quick Start"
+            echo '```bash'
+            echo "docker pull ${{ env.IMAGE_NAME }}:stable"
+            echo '```'
+          } > changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: stable-${{ needs.build-and-push.outputs.short_sha }}
+          name: "Stable - ${{ needs.build-and-push.outputs.short_sha }}"
+          body_path: changelog.md
+          make_latest: true
